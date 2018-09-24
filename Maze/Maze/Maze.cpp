@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -15,15 +16,66 @@ char start[3][3] = { {'.','.','.'},{'.','S','.'},{'.','.','.'} };
 char goal[3][3] = { {'.','.','.'},{'.','F','.'},{'.','.','.'} };
 char open[3][3] = { {'.','.','.'},{'.','.','.'},{'.','.','.'} };
 char wall[3][3] = { {'X','X','X'},{'X','X','X'},{'X','X','X'} };
+char path[3][3] = { {',',',',','},{',',',',','},{',',',',','} };
 int boxX = 3, boxY = 3;
 int mazeX, mazeY;
 string mazeboxes[20][20]; //supports mazes up to 20 by 20 squares big
 
+//opens or creates output file to write maze in
+ofstream outFile("c:\\users\\rick\\source\\repos\\Maze\\Maze\\output_file.txt"); //can't get to work without full file path, adjust filepath to run properly
+
+
+void printMaze() {
+	
+	//loops through coordinates, checking for the type of square and writing the correct characters to write the maze to the output file.
+	int x = 0;
+	for (int y = 0; y < mazeY; y++) {
+		while (x < mazeX) {
+			if (mazeboxes[x / 3][y / 3] == "start") {
+				for (int j = 0; j < boxX; j++) {
+					outFile << start[y % 3][j];
+					x++;
+				}
+			}
+			else if (mazeboxes[x / 3][y / 3] == "finish") {
+				for (int j = 0; j < boxX; j++) {
+					outFile << goal[y % 3][j];
+					x++;
+				}
+			}
+			else if (mazeboxes[x / 3][y / 3] == "wall") {
+				for (int j = 0; j < boxX; j++) {
+					outFile << wall[y % 3][j];
+					x++;
+				}
+			}
+			else if (mazeboxes[x / 3][y / 3] == "open") {
+				for (int j = 0; j < boxX; j++) {
+					outFile << open[y % 3][j];
+					x++;
+				}
+			}
+			else if (mazeboxes[x / 3][y / 3] == "path") {
+				for (int j = 0; j < boxX; j++) {
+					outFile << path[y % 3][j];
+					x++;
+				}
+			}
+
+		}
+		x = 0;
+		outFile << endl;
+	}
+	for (int i = 0; i < mazeX; i++) {
+		outFile << "-";
+	}
+	outFile << " " << endl;
+}
 
 int main() {
 
 	ifstream inFile("c:\\users\\rick\\source\\repos\\Maze\\Maze\\input_file.txt"); //can't get to work without full file path, adjust filepath to run properly
-	
+
 	if (inFile.fail()) {
 		cerr << "Error opening File" << endl;
 		system("pause");
@@ -60,7 +112,13 @@ int main() {
 	}
 	mazeX = mazesize[0] * 3;
 	mazeY = mazesize[1] * 3;
-	
+
+	for (int i = 0; i < mazesize[0]; i++) {
+		for (int j = 0; j < mazesize[1]; j++) {
+			mazeboxes[i][j] = "open";
+		}
+	}
+
 	//splits the start position section and sets coordinates for start position
 	stringstream startstream(splitinput[1]);
 	vector<int> startpos;
@@ -68,6 +126,8 @@ int main() {
 		startpos.push_back(stoi(section));
 	}
 	mazeboxes[startpos[0]][startpos[1]] = "start";
+	int ratX = startpos[0];
+	int ratY = startpos[1];
 
 	//splits the finishing location position section and set coordinates for finishing location
 	stringstream finishstream(splitinput[2]);
@@ -88,99 +148,58 @@ int main() {
 		mazeboxes[wallpos[wallcount]][wallpos[wallcount + 1]] = "wall";
 		wallcount = wallcount + 2;
 	}
-	
 
-	/* couts for testing
-	cout << splitinput[0] << endl;
-	cout << splitinput[1] << endl;
-	cout << splitinput[2] << endl;
-	cout << splitinput[3] << endl;
-	cout << mazeX << endl;
-	cout << mazeY << endl;
-	cout << mazeboxes[0][0] << endl;
-	cout << mazeboxes[9][9] << endl;
-	cout << wallpos[0] << endl;
-	cout << wallpos[1] << endl;
-	cout << wallpos[2] << endl;
-	cout << wallpos[3] << endl;
-	cout << mazeboxes[0][5] << endl;
-	cout << mazeboxes[6][5] << endl;
-	cout << mazeboxes[4][3] << endl;
-	cout << mazeboxes[6][6] << endl;
-	cout << mazeboxes[8][4] << endl;
-	
-	int x = 0;
-	for (int y = 0; y < mazeY; y++) {
-		while (x < mazeX) {
-			if (mazeboxes[x / 3][y / 3] == "start") {
-				for (int j = 0; j < boxX; j++) {
-					cout << start[y % 3][j];
-					x++;
-				}
-			}
-			else if (mazeboxes[x / 3][y / 3] == "finish") {
-				for (int j = 0; j < boxX; j++) {
-					cout << goal[y % 3][j];
-					x++;
-				}
-			}
-			else if (mazeboxes[x / 3][y / 3] == "wall") {
-				for (int j = 0; j < boxX; j++) {
-					cout << wall[y % 3][j];
-					x++;
-				}
-			}
-			else {
-				for (int j = 0; j < boxX; j++) {
-					cout << open[y % 3][j];
-					x++;
-				}
-			}
-			
-			
+	printMaze();
+
+	stack <string> route;
+	while (mazeboxes[ratX][ratY] != "finish") { //puzzle solving loop
+		mazeboxes[ratX][ratY] = "path";
+
+		if (mazeboxes[ratX + 1][ratY] == "open" | mazeboxes[ratX + 1][ratY] == "finish") {
+			ratX++;
+			route.push("west");
+			cout << route.top() << endl;
+			continue;
 		}
-		x = 0;
-		cout << endl;
-	}
-	*/
-
-	//opens or creates output file to write maze in
-	ofstream outFile("c:\\users\\rick\\source\\repos\\Maze\\Maze\\output_file.txt"); //can't get to work without full file path, adjust filepath to run properly
-
-	//loops through coordinates, checking for the type of square and writing the correct characters to write the maze to the output file.
-	int x = 0;
-	for (int y = 0; y < mazeY; y++) {
-		while (x < mazeX) {
-			if (mazeboxes[x / 3][y / 3] == "start") {
-				for (int j = 0; j < boxX; j++) {
-					outFile << start[y % 3][j];
-					x++;
-				}
-			}
-			else if (mazeboxes[x / 3][y / 3] == "finish") {
-				for (int j = 0; j < boxX; j++) {
-					outFile << goal[y % 3][j];
-					x++;
-				}
-			}
-			else if (mazeboxes[x / 3][y / 3] == "wall") {
-				for (int j = 0; j < boxX; j++) {
-					outFile << wall[y % 3][j];
-					x++;
-				}
-			}
-			else {
-				for (int j = 0; j < boxX; j++) {
-					outFile << open[y % 3][j];
-					x++;
-				}
-			}
-
-
+		else if (mazeboxes[ratX][ratY + 1] == "open" | mazeboxes[ratX][ratY + 1] == "finish") {
+			ratY++;
+			route.push("south");
+			cout << route.top() << endl;
+			continue;
 		}
-		x = 0;
-		outFile << endl;
+		else if (mazeboxes[ratX - 1][ratY] == "open" | mazeboxes[ratX - 1][ratY] == "finish") {
+			ratX--;
+			route.push("east");
+			cout << route.top() << endl;
+			continue;
+		}
+		else if (mazeboxes[ratX][ratY - 1] == "open" | mazeboxes[ratX][ratY - 1] == "finish") {
+			ratY--;
+			route.push("north");
+			cout << route.top() << endl;
+			
+			continue;
+		}
+		else {
+			string last = route.top();
+			route.pop();
+			if (last == "west") {
+				ratX--;
+			}
+			else if (last == "south") {
+				ratY--;
+			}
+			else if (last == "east") {
+				ratX++;
+			}
+			else if (last == "north") {
+				ratY++;
+			}
+		}
+		
 	}
+
+	printMaze();
 
 	//displays message to console once finished and pauses
 	cout << "Check output_file.txt to see the maze!" << endl;
