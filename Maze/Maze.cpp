@@ -20,6 +20,7 @@ char wall[3][3] = { {'X','X','X'},{'X','X','X'},{'X','X','X'} };
 char path[3][3] = { {',',',',','},{',',',',','},{',',',',','} };
 int boxX = 3, boxY = 3;
 int mazeX, mazeY;
+int finishX, finishY;
 string mazeboxes[20][20]; //supports mazes up to 20 by 20 squares big
 
 //opens or creates output file to write maze in
@@ -73,14 +74,15 @@ void printMaze() {
 	outFile << " " << endl;
 }
 
-class qBox {
+struct qBox {
 public:
-	int x, y;
+	int x, y, manDist;
 
 	qBox() {};
 	qBox(int i, int j) {
 		x = i;
 		y = j;
+		manDist = abs(finishX - x) + abs(finishY - y);
 	}
 
 	int getX() {
@@ -91,6 +93,12 @@ public:
 		return y;
 	}
 	
+};
+
+struct Compare {
+	bool operator()(const qBox &lhs, const qBox &rhs) const {
+		return lhs.manDist < rhs.manDist;
+	}
 };
 
 int main() {
@@ -149,8 +157,7 @@ int main() {
 	mazeboxes[startpos[0]][startpos[1]] = "start";
 	int ratX = startpos[0];
 	int ratY = startpos[1];
-	qBox start = qBox(startpos[0], startpos[1]);
-
+	
 	//splits the finishing location position section and set coordinates for finishing location
 	stringstream finishstream(splitinput[2]);
 	vector<int> finishpos;
@@ -158,6 +165,9 @@ int main() {
 		finishpos.push_back(stoi(section));
 	}
 	mazeboxes[finishpos[0]][finishpos[1]] = "finish";
+	finishX = finishpos[0];
+	finishY = finishpos[1];
+	qBox start = qBox(startpos[0], startpos[1]);
 
 	//splits the wall coordinates and sets all positions of wall squares
 	stringstream wallstream(splitinput[3]);
@@ -173,7 +183,8 @@ int main() {
 
 	printMaze();
 
-	/*stack <string> route; //puzzle solving loop using stack
+	//puzzle solving loop using stack
+	/*stack <string> route; 
 	while (mazeboxes[ratX][ratY] != "finish") { 
 		mazeboxes[ratX][ratY] = "path";
 
@@ -222,15 +233,15 @@ int main() {
 	}*/
 
 
-
-	queue<qBox> paths;
+	//puzzle solving loop using queue
+	/*queue<qBox> paths;
 	paths.push(start);
 	int testX, testY;
 	testX = paths.front().getX();
 	testY = paths.front().getY();
 	while (mazeboxes[testX][testY] != "finish") {
-
-		
+	
+		mazeboxes[testX][testY] = "path";
 
 		if (mazeboxes[testX + 1][testY] == "open" | mazeboxes[testX + 1][testY] == "finish") {
 			paths.push(qBox(testX + 1, testY));
@@ -244,12 +255,50 @@ int main() {
 		if (mazeboxes[testX][testY - 1] == "open" | mazeboxes[testX][testY - 1] == "finish") {
 			paths.push(qBox(testX, testY - 1));
 		}
-		
-		mazeboxes[paths.front().getX()][paths.front().getY()] = "path";
+				
 		paths.pop();
 		testX = paths.front().getX();
 		testY = paths.front().getY();
+	}*/
+
+	priority_queue<qBox, vector<qBox>, Compare> paths;
+	paths.push(start);
+	int testX, testY;
+	testX = paths.top().x;
+	testY = paths.top().y;
+	while (mazeboxes[testX][testY] != "finish") {
+
+		mazeboxes[testX][testY] = "path";
+		/*cout << "size "; cout << paths.size() << endl;
+		cout << "top x "; cout << paths.top().x << endl;
+		cout << "top y "; cout << paths.top().y << endl;
+		system("pause");*/
+		paths.pop();
+		//printMaze();
+		
+
+		if (mazeboxes[testX + 1][testY] == "open" | mazeboxes[testX + 1][testY] == "finish") {
+			paths.push(qBox(testX + 1, testY));
+			//cout << "right" << endl;
+		}
+		if (mazeboxes[testX][testY + 1] == "open" | mazeboxes[testX][testY + 1] == "finish") {
+			paths.push(qBox(testX, testY + 1));
+			//cout << "down" << endl;
+		}
+		if (mazeboxes[testX - 1][testY] == "open" | mazeboxes[testX - 1][testY] == "finish") {
+			paths.push(qBox(testX - 1, testY));
+			//cout << "left" << endl;
+		}
+		if (mazeboxes[testX][testY - 1] == "open" | mazeboxes[testX][testY - 1] == "finish") {
+			paths.push(qBox(testX, testY - 1));
+			//cout << "up" << endl;
+		}
+		
+		testX = paths.top().x;
+		testY = paths.top().y;
+
 	}
+
 
 
 	printMaze();
