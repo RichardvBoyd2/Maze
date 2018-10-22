@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -199,32 +200,30 @@ int main() {
 		}
 	}
 
-	//Depth First Search
-	stack <node> route;
+	//Breadth First Search
+	queue<node> route;
 	route.push(graph.front());
-	int ratX = route.top().x;
-	int ratY = route.top().y;
+	int ratX = route.front().x;
+	int ratY = route.front().y;
 	while (mazeboxes[ratX][ratY] != "finish") {
+		
+
+		if (route.front().west != NULL && mazeboxes[(*route.front().west).x][(*route.front().west).y] != "path") {
+			route.push(*route.front().west);
+		}
+		if (route.front().south != NULL && mazeboxes[(*route.front().south).x][(*route.front().south).y] != "path") {
+			route.push(*route.front().south);
+		}
+		if (route.front().east != NULL && mazeboxes[(*route.front().east).x][(*route.front().east).y] != "path") {
+			route.push(*route.front().east);
+		}
+		if (route.front().north != NULL && mazeboxes[(*route.front().north).x][(*route.front().north).y] != "path") {
+			route.push(*route.front().north);
+		}
 		mazeboxes[ratX][ratY] = "path";
-
-		if (route.top().west != NULL && mazeboxes[(*route.top().west).x][(*route.top().west).y] != "path") {
-			route.push(*route.top().west);
-		}
-		else if (route.top().south != NULL && mazeboxes[(*route.top().south).x][(*route.top().south).y] != "path") {
-			route.push(*route.top().south);
-		}
-		else if (route.top().east != NULL && mazeboxes[(*route.top().east).x][(*route.top().east).y] != "path") {
-			route.push(*route.top().east);
-		}
-		else if (route.top().north != NULL && mazeboxes[(*route.top().north).x][(*route.top().north).y] != "path") {
-			route.push(*route.top().north);
-		}
-		else {
-			route.pop();
-		}
-
-		ratX = route.top().x;
-		ratY = route.top().y;
+		route.pop();
+		ratX = route.front().x;
+		ratY = route.front().y;
 	}
 
 	printMaze();
